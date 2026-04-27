@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register Form</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="login.css">
+</head>
+<body>
+
+<div class="box">
+  <span class="borderline"></span>
+  <form id="registerForm">
+    <h2>Register</h2>
+
+    <div class="inputbox">
+      <input type="text" id="name" required>
+      <span>Name</span>
+      <i></i>
+    </div>
+
+    <div class="inputbox">
+      <input type="email" id="email" required>
+      <span>Email</span>
+      <i></i>
+    </div>
+
+    <div class="inputbox">
+      <input type="password" id="password" required>
+      <span>Password</span>
+      <i></i>
+    </div>
+
+    <div class="inputbox">
+      <input type="password" id="cpassword" required>
+      <span>Confirm Password</span>
+      <i></i>
+    </div>
+
+    <div class="inputbox">
+      <select id="user_type">
+        <option value="user">User</option>
+        <option value="admin">Admin</option>
+      </select>
+      <i></i>
+    </div>
+
+    <div class="links">
+      <a href="#">Forgot Password</a>
+      <a href="login.html">Login</a>
+    </div>
+
+    <input type="submit" value="Register Now">
+  </form>
+</div>
+
+<script src="app.js"></script>
+<script>
+  document.getElementById('registerForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const name = document.getElementById('name').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const cpassword = document.getElementById('cpassword').value;
+    const user_type = document.getElementById('user_type').value;
+
+    if (password !== cpassword) {
+      showMessage('Passwords do not match!', true);
+      return;
+    }
+
+    const users = getUsers();
+
+    if (users.find(u => u.email === email)) {
+      showMessage('User already exists!', true);
+      return;
+    }
+
+    const newUser = {
+      id: nextUserId(),
+      name,
+      email,
+      password,
+      user_type
+    };
+
+    users.push(newUser);
+    saveUsers(users);
+
+    showMessage('Registered Successfully!');
+    setTimeout(() => window.location.href = 'login.html', 1200);
+  });
+</script>
+
+</body>
+</html>

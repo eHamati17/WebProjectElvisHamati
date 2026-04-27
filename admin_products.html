@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Products</title>
+  <link rel="stylesheet" href="admin.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="admin_header">
+  <div class="header_navigation">
+    <a href="admin_page.html" class="header_logo">Admin <span>Dashboard</span></a>
+    <nav class="header_navbar">
+      <a href="admin_page.html">Home</a>
+      <a href="admin_products.html">Products</a>
+      <a href="admin_users.html">Users</a>
+    </nav>
+    <div class="header_icons">
+      <a href="#" onclick="clearSession();window.location.href='login.html'" class="delete-btn">Logout</a>
+    </div>
+  </div>
+</header>
+
+<section class="admin_add_products">
+  <form id="addForm">
+    <h3>Add Product</h3>
+    <input type="text" id="prodName" class="admin_input" placeholder="Enter Product Name" required>
+    <input type="number" min="0" step="0.01" id="prodPrice" class="admin_input" placeholder="Enter Product Price" required>
+    <input type="file" id="prodImage" class="admin_input" accept="image/jpg, image/jpeg, image/png" required>
+    <input type="submit" class="admin_input" value="Add Product">
+  </form>
+</section>
+
+<section class="show_products">
+  <div class="product_box_cont" id="productGrid"></div>
+</section>
+
+<!-- Edit modal -->
+<section class="edit_product_form" id="editModal" style="display:none">
+  <form id="editForm">
+    <input type="hidden" id="editId">
+    <img id="editPreview" src="" alt="" style="height:13rem">
+    <input type="text" id="editName" class="admin_input update_box" required placeholder="Enter Product Name">
+    <input type="number" step="0.01" id="editPrice" min="0" class="admin_input update_box" required placeholder="Enter Product Price">
+    <input type="file" id="editImage" class="admin_input update_box" accept="image/jpg, image/jpeg, image/png">
+    <input type="submit" value="Update" class="product_btn">
+    <input type="button" value="Cancel" class="product_btn product_del_btn" onclick="document.getElementById('editModal').style.display='none'">
+  </form>
+</section>
+
+<script src="app.js"></script>
+<script>
+  const session = requireAuth('admin');
+  if (!session) throw 'redirecting';
+
+  function renderProducts() {
+    const products = getProducts();
+    const grid = document.getElementById('productGrid');
+    grid.innerHTML = '';
+
+    if (products.length === 0) {
+      grid.innerHTML = '<p class="empty">No Product added yet!</p>';
+      return;
+    }
+
+    products.forEach(p => {
+      grid.innerHTML += `
+        <div class="product_box">
+          <img src="./uploaded_img/${p.image}" alt="${p.name}">
+          <div class="product_name">${p.name}</div>
+          <div class="product_price">$ ${p.price} /-</div>
+          <a href="#" onclick="openEdit(${p.id})" class="product_btn">Update</a>
+          <a href="#" onclick="deleteProduct(${p.id})" class="product_btn product_del_btn">Delete</a>
+        </div>`;
+    });
+  }
+
+  // Add product
+  document.getElementById('addForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const name = document.getElementById('prodName').value.trim();
+    const price = parseFloat(document.getElementById('prodPrice').value);
+    const fileInput = document.getElementById('prodImage');
+
+    const products = getProducts();
+
+    if (products.find(p => p.name.toLowerCase() === name.toLowerCase())) {
+      showMessage('The given product is already added', true);
+      return;
+    }
+
+    // For localStorage, we store the filename. In a real app you'd use base64 or a server.
+    // We'll use the file name and assume images go in uploaded_img/
+    const fileName = fileInput.files[0] ? fileInput.files[0].name : 'default.jpg';
+
+    products.push({ id: nextProductId(), name, price, image: fileName });
+    saveProducts(products);
+    showMessage('Product added successfully!');
+    this.reset();
+    renderProducts();
+  });
+
+  // Delete
+  window.deleteProduct = function(id) {
+    if (!confirm('Are you sure you want to delete this product?')) return;
+    const products = getProducts().filter(p => p.id !== id);
+    saveProducts(products);
+    renderProducts();
+  };
+
+  // Edit
+  window.openEdit = function(id) {
+    const p = getProducts().find(pr => pr.id === id);
+    if (!p) return;
+    document.getElementById('editId').value = p.id;
+    document.getElementById('editName').value = p.name;
+    document.getElementById('editPrice').value = p.price;
+    document.getElementById('editPreview').src = './uploaded_img/' + p.image;
+    document.getElementById('editModal').style.display = 'flex';
+  };
+
+  document.getElementById('editForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const id = parseInt(document.getElementById('editId').value);
+    const name = document.getElementById('editName').value.trim();
+    const price = parseFloat(document.getElementById('editPrice').value);
+    const fileInput = document.getElementById('editImage');
+
+    const products = getProducts();
+    const idx = products.findIndex(p => p.id === id);
+    if (idx === -1) return;
+
+    products[idx].name = name;
+    products[idx].price = price;
+
+    if (fileInput.files[0]) {
+      products[idx].image = fileInput.files[0].name;
+    }
+
+    saveProducts(products);
+    document.getElementById('editModal').style.display = 'none';
+    showMessage('Product updated successfully!');
+    renderProducts();
+  });
+
+  renderProducts();
+</script>
+
+</body>
+</html>

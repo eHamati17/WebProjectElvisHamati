@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Page</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="admin.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- Admin Header -->
+<header class="admin_header">
+  <div class="header_navigation">
+    <a href="admin_page.html" class="header_logo">Admin <span>Dashboard</span></a>
+    <nav class="header_navbar">
+      <a href="admin_page.html">Home</a>
+      <a href="admin_products.html">Products</a>
+      <a href="admin_users.html">Users</a>
+    </nav>
+    <div class="header_icons">
+      <a href="#" onclick="clearSession();window.location.href='login.html'" class="delete-btn">Logout</a>
+    </div>
+    <div class="header_acc_box">
+      <p>Username: <span id="adminName"></span></p>
+      <p>Email: <span id="adminEmail"></span></p>
+      <a href="#" onclick="clearSession();window.location.href='login.html'" class="delete-btn">Logout</a>
+    </div>
+  </div>
+</header>
+
+<section class="admin_dashboard">
+  <div class="admin_box_container" id="statsGrid"></div>
+</section>
+
+<script src="app.js"></script>
+<script>
+  const session = requireAuth('admin');
+  if (!session) throw 'redirecting';
+
+  document.getElementById('adminName').textContent = session.name;
+  document.getElementById('adminEmail').textContent = session.email;
+
+  const users = getUsers();
+  const products = getProducts();
+  const orders = getOrders();
+
+  const pendingTotal = orders.filter(o => o.status === 'pending').reduce((sum, o) => sum + o.total_price, 0);
+  const completedTotal = orders.filter(o => o.status === 'completed').reduce((sum, o) => sum + o.total_price, 0);
+  const userCount = users.filter(u => u.user_type === 'user').length;
+  const adminCount = users.filter(u => u.user_type === 'admin').length;
+
+  const stats = [
+    { value: `$ ${pendingTotal}`, label: 'Total Payments Pending' },
+    { value: `$ ${completedTotal}`, label: 'Completed Payments' },
+    { value: products.length, label: 'Products Added' },
+    { value: userCount, label: 'Users Present' },
+    { value: adminCount, label: 'Admins Present' },
+    { value: users.length, label: 'Total Accounts' },
+  ];
+
+  const grid = document.getElementById('statsGrid');
+  stats.forEach(s => {
+    grid.innerHTML += `
+      <div class="admin_box">
+        <h3>${s.value}</h3>
+        <p>${s.label}</p>
+      </div>`;
+  });
+</script>
+
+</body>
+</html>

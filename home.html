@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Home Page</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="home.css">
+</head>
+<body>
+
+<!-- User Header -->
+<header class="user_header">
+  <div class="header_1">
+    <div class="user_flex">
+      <div class="logo_cont">
+        <a href="home.html" class="book_logo">CINEMA</a>
+      </div>
+      <nav class="navbar">
+        <a href="home.html">Home</a>
+        <a href="shop.html">Shop</a>
+      </nav>
+      <div class="last_part">
+        <div class="loginorreg" id="authLinks"></div>
+      </div>
+      <div class="header_acc_box" id="accBox" style="display:none">
+        <p>Username: <span id="accName"></span></p>
+        <p>Email: <span id="accEmail"></span></p>
+      </div>
+    </div>
+  </div>
+</header>
+
+<section class="home_cont">
+  <div class="main_descrip">
+    <h1>The CINEMA</h1>
+  </div>
+</section>
+
+<section class="products_cont">
+  <div class="pro_box_cont" id="productGrid"></div>
+</section>
+
+<script src="app.js"></script>
+<script>
+  const session = requireAuth();
+  if (!session) throw 'redirecting';
+
+  // Header auth links
+  document.getElementById('authLinks').innerHTML = `<a href="#" onclick="clearSession();window.location.href='login.html'" class="delete-btn">Logout</a>`;
+  document.getElementById('accName').textContent = session.name;
+  document.getElementById('accEmail').textContent = session.email;
+
+  // Render products (limit 6, same as PHP LIMIT 6)
+  const products = getProducts().slice(0, 6);
+  const grid = document.getElementById('productGrid');
+
+  if (products.length === 0) {
+    grid.innerHTML = '<p class="empty">No Products Added Yet!</p>';
+  } else {
+    products.forEach(p => {
+      const form = document.createElement('form');
+      form.className = 'pro_box';
+      form.innerHTML = `
+        <img src="./uploaded_img/${p.image}" alt="${p.name}">
+        <h3>${p.name}</h3>
+        <p>$ ${p.price}/-</p>
+        <input type="number" min="1" value="1" class="qty_input">
+        <input type="submit" value="Add to Cart" class="product_btn">
+      `;
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const qty = parseInt(form.querySelector('.qty_input').value) || 1;
+        const cart = getCart();
+
+        if (cart.find(c => c.name === p.name && c.user_id === session.id)) {
+          showMessage('Already added to cart!');
+          return;
+        }
+
+        cart.push({
+          user_id: session.id,
+          name: p.name,
+          price: p.price,
+          quantity: qty,
+          image: p.image
+        });
+        saveCart(cart);
+        showMessage('Product added to cart!');
+      });
+      grid.appendChild(form);
+    });
+  }
+</script>
+
+</body>
+</html>

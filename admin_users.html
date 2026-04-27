@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Users</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="admin.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="admin_header">
+  <div class="header_navigation">
+    <a href="admin_page.html" class="header_logo">Admin <span>Dashboard</span></a>
+    <nav class="header_navbar">
+      <a href="admin_page.html">Home</a>
+      <a href="admin_products.html">Products</a>
+      <a href="admin_users.html">Users</a>
+    </nav>
+    <div class="header_icons">
+      <a href="#" onclick="clearSession();window.location.href='login.html'" class="delete-btn">Logout</a>
+    </div>
+  </div>
+</header>
+
+<section class="admin_users">
+  <div class="admin_box_container" id="usersGrid"></div>
+</section>
+
+<script src="app.js"></script>
+<script>
+  const session = requireAuth('admin');
+  if (!session) throw 'redirecting';
+
+  function renderUsers() {
+    const users = getUsers();
+    const grid = document.getElementById('usersGrid');
+    grid.innerHTML = '';
+
+    users.forEach(u => {
+      const typeColor = u.user_type === 'admin' ? 'blue' : 'green';
+      grid.innerHTML += `
+        <div class="admin_box">
+          <p>Username : <span>${u.name}</span></p>
+          <p>Email : <span>${u.email}</span></p>
+          <p>Usertype : <span style="color:${typeColor}">${u.user_type}</span></p>
+          <a href="#" onclick="deleteUser(${u.id})" class="delete-btn">delete</a>
+        </div>`;
+    });
+  }
+
+  window.deleteUser = function(id) {
+    if (!confirm('Are you sure you want to delete this user?')) return;
+
+    // Don't allow deleting yourself
+    if (id === session.id) {
+      showMessage('You cannot delete your own account!', true);
+      return;
+    }
+
+    const users = getUsers().filter(u => u.id !== id);
+    saveUsers(users);
+    showMessage('1 user has been deleted');
+    renderUsers();
+  };
+
+  renderUsers();
+</script>
+
+</body>
+</html>
